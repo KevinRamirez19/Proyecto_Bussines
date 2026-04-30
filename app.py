@@ -18,3 +18,7 @@ def dashboard():
 @app.route("/PGC")
 def pgc():
     return render_template("pgc.html")
+
+@app.route("/comparaciones")
+def comparaciones():
+    return render_template("comparaciones.html")
