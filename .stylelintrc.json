@@ -1,0 +1,3 @@
+{
+  "ignoreFiles": ["**/*.html", "**/*.jinja2", "**/*.jinja"]
+}

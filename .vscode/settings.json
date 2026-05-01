@@ -1,0 +1,13 @@
+{
+  "[html]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "css.lint.compatibleVendorPrefixes": "ignore",
+  "css.lint.vendorPrefix": "ignore",
+  "css.lint.universalSelector": "ignore",
+  "css.lint.zeroUnits": "ignore",
+  "css.lint.keyframeProperties": "ignore",
+  "css.lint.validProperties": [],
+  "html.validate.styles": false,
+  "stylelint.enable": false
+}

@@ -12,10 +12,10 @@
   <!-- Filtros -->
   <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:1.5rem;align-items:center;">
     <input type="text" id="search-input" placeholder="Buscar app..." 
-      style="padding:9px 14px;border-radius:10px;border:1px solid rgba(255,255,255,0.1);background:#111118;color:#f0f0f5;font-size:14px;flex:1;min-width:200px;outline:none;">
+      style="padding:9px 14px;border-radius:10px;border:1px solid rgba(255,255,255,0.1);background:#fcfcfc;color:#f0f0f5;font-size:14px;flex:1;min-width:200px;outline:none;">
     
     <select id="tipo-filter"
-      style="padding:9px 14px;border-radius:10px;border:1px solid rgba(255,255,255,0.1);background:#111118;color:#f0f0f5;font-size:14px;cursor:pointer;">
+      style="padding:9px 14px;border-radius:10px;border:1px solid rgba(255,255,255,0.1);background:#ffffff;color:#7a7a7a;font-size:14px;cursor:pointer;">
       <option value="">Todos los tipos</option>
       <option value="Gratis">Gratis</option>
       <option value="Pago">Pago</option>
@@ -99,29 +99,62 @@ function render(data){
 }
 
 // 🔹 Render botones
-function renderPagination(total){
+function renderPagination(total) {
   const totalPages = Math.ceil(total / rowsPerPage);
   const container = document.getElementById('pagination');
 
-  let buttons = '';
+  const btnBase = `padding:6px 12px;border-radius:8px;border:1px solid var(--border);
+                   cursor:pointer;font-size:13px;font-family:'DM Sans',sans-serif;
+                   transition:all 0.2s;`;
+  const btnActivo = btnBase + `background:var(--accent);color:#fff;font-weight:600;border-color:var(--accent);`;
+  const btnNormal = btnBase + `background:var(--bg2);color:var(--text);`;
+  const btnDisabled = btnBase + `background:var(--bg3);color:var(--muted);cursor:default;opacity:0.5;`;
 
-  // ⬅️ anterior
-  buttons += `<button onclick="changePage(${currentPage-1})" ${currentPage===1?'disabled':''}>⬅️</button>`;
-
-  // números
-  for(let i = 1; i <= totalPages; i++){
-    buttons += `
-      <button onclick="changePage(${i})"
-        style="padding:6px 10px;border-radius:6px;border:none;cursor:pointer;
-        ${i===currentPage?'background:#34e89e;color:#000;font-weight:bold;':'background:#1a1a22;color:#fff;'}">
-        ${i}
-      </button>`;
+  // Construir rango de páginas visibles (máx 7 botones)
+  let pages = [];
+  if (totalPages <= 7) {
+    pages = Array.from({length: totalPages}, (_, i) => i + 1);
+  } else {
+    pages = [1];
+    if (currentPage > 3) pages.push('...');
+    for (let i = Math.max(2, currentPage - 1); i <= Math.min(totalPages - 1, currentPage + 1); i++) {
+      pages.push(i);
+    }
+    if (currentPage < totalPages - 2) pages.push('...');
+    pages.push(totalPages);
   }
 
-  // ➡️ siguiente
-  buttons += `<button onclick="changePage(${currentPage+1})" ${currentPage===totalPages?'disabled':''}>➡️</button>`;
+  let html = `
+    <div style="display:flex;gap:6px;align-items:center;justify-content:center;flex-wrap:wrap;">
+      <button onclick="changePage(${currentPage - 1})"
+        style="${currentPage === 1 ? btnDisabled : btnNormal}"
+        ${currentPage === 1 ? 'disabled' : ''}>
+        ← Anterior
+      </button>`;
 
-  container.innerHTML = buttons;
+  pages.forEach(p => {
+    if (p === '...') {
+      html += `<span style="color:var(--muted);padding:0 4px;">…</span>`;
+    } else {
+      html += `<button onclick="changePage(${p})"
+        style="${p === currentPage ? btnActivo : btnNormal}">
+        ${p}
+      </button>`;
+    }
+  });
+
+  html += `
+      <button onclick="changePage(${currentPage + 1})"
+        style="${currentPage === totalPages ? btnDisabled : btnNormal}"
+        ${currentPage === totalPages ? 'disabled' : ''}>
+        Siguiente →
+      </button>
+      <span style="font-size:12px;color:var(--muted);margin-left:8px;">
+        Página ${currentPage} de ${totalPages}
+      </span>
+    </div>`;
+
+  container.innerHTML = html;
 }
 
 // 🔹 Cambiar página

@@ -6,41 +6,51 @@
   <div class="section-head">
     <h2>Dashboard Power BI</h2>
     <div class="divider"></div>
-    <p>Visualización interactiva completa. Filtra por categoría, tipo y rango de instalaciones.</p>
+    <p>Visualización interactiva completa. Filtra por categoría, tipo y rango de instalaciones directamente en el dashboard.</p>
   </div>
 
+  <!-- Power BI embed -->
   <div class="bi-container">
-    <!-- 
-      CUANDO TENGAS EL IFRAME DE POWER BI:
-      1. Reemplaza todo el bloque bi-placeholder por:
-         <iframe class="bi-iframe" src="TU_URL_DE_POWER_BI_AQUI" allowFullScreen="true"></iframe>
-      2. Elimina este comentario
-    -->
-    <div class="bi-placeholder">
-      <div class="icon">📊</div>
-      <h3>Dashboard Power BI</h3>
-      <p>Para embeber tu reporte de Power BI, publícalo primero y reemplaza este bloque con el iframe que te genera Power BI.</p>
-      <p style="margin-top:8px;font-size:13px;color:#888898;">En Power BI: <strong style="color:#ccc;">Archivo → Insertar informe → Sitio web o portal</strong></p>
-      <code>&lt;<iframe title="Graficos Bussines" width="600" height="373.5" src="https://app.powerbi.com/view?r=eyJrIjoiNmJmN2JmZDYtZTU4MS00MjhjLTljZWEtNmQ3MTk5NGVlMDU5IiwidCI6IjA3ZGE2N2EwLTFmNDMtNGU4Yy05NzdmLTVmODhiNjQ3MGVlNiIsImMiOjR9" frameborder="0" allowFullScreen="true"></iframe> ... &gt;&lt;/iframe&gt;</code>
+    <div style="position:relative;width:100%;padding-bottom:56.25%;height:0;overflow:hidden;">
+      <iframe
+        title="Graficos Bussines"
+        src="https://app.powerbi.com/view?r=eyJrIjoiNmJmN2JmZDYtZTU4MS00MjhjLTljZWEtNmQ3MTk5NGVlMDU5IiwidCI6IjA3ZGE2N2EwLTFmNDMtNGU4Yy05NzdmLTVmODhiNjQ3MGVlNiIsImMiOjR9"
+        frameborder="0"
+        allowFullScreen="true"
+        style="position:absolute;top:0;left:0;width:100%;height:100%;border:none;">
+      </iframe>
     </div>
   </div>
 
-  <!-- Instrucciones -->
-  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin-top:2rem;">
-    <div style="background:#111118;border:1px solid rgba(255,255,255,0.07);border-radius:16px;padding:1.5rem;">
-      <div style="font-size:24px;margin-bottom:12px;">1️⃣</div>
-      <div style="font-family:'Syne',sans-serif;font-weight:600;margin-bottom:8px;">Publicar en Power BI</div>
-      <div style="font-size:13px;color:#888898;line-height:1.6;">Abre tu .pbix → clic en "Publicar" → selecciona "Mi área de trabajo" → espera que suba.</div>
+  <!-- Tips de uso -->
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-top:2rem;">
+    <div style="background:#ffffff;border:1px solid rgba(255,255,255,0.07);border-radius:14px;padding:1.25rem;display:flex;gap:12px;align-items:flex-start;">
+      <span style="font-size:20px;flex-shrink:0;">🔍</span>
+      <div>
+        <div style="font-weight:600;font-size:14px;margin-bottom:4px;">Filtros interactivos</div>
+        <div style="font-size:13px;color:#888898;line-height:1.5;">Haz clic en cualquier categoría o barra para filtrar todas las gráficas simultáneamente.</div>
+      </div>
     </div>
-    <div style="background:#111118;border:1px solid rgba(255,255,255,0.07);border-radius:16px;padding:1.5rem;">
-      <div style="font-size:24px;margin-bottom:12px;">2️⃣</div>
-      <div style="font-family:'Syne',sans-serif;font-weight:600;margin-bottom:8px;">Obtener el iframe</div>
-      <div style="font-size:13px;color:#888898;line-height:1.6;">En app.powerbi.com → abre el reporte → Archivo → Insertar informe → Sitio web o portal → copia el código iframe.</div>
+    <div style="background:#ffffff;border:1px solid rgba(255,255,255,0.07);border-radius:14px;padding:1.25rem;display:flex;gap:12px;align-items:flex-start;">
+      <span style="font-size:20px;flex-shrink:0;">↔️</span>
+      <div>
+        <div style="font-weight:600;font-size:14px;margin-bottom:4px;">Pantalla completa</div>
+        <div style="font-size:13px;color:#888898;line-height:1.5;">Usa el ícono de pantalla completa en la esquina del dashboard para una mejor visualización.</div>
+      </div>
     </div>
-    <div style="background:#111118;border:1px solid rgba(255,255,255,0.07);border-radius:16px;padding:1.5rem;">
-      <div style="font-size:24px;margin-bottom:12px;">3️⃣</div>
-      <div style="font-family:'Syne',sans-serif;font-weight:600;margin-bottom:8px;">Pegar aquí</div>
-      <div style="font-size:13px;color:#888898;line-height:1.6;">En <code style="background:#18181f;padding:2px 6px;border-radius:4px;font-size:12px;">templates/dashboards.html</code> reemplaza el bloque <code style="background:#18181f;padding:2px 6px;border-radius:4px;font-size:12px;">bi-placeholder</code> con tu iframe.</div>
+    <div style="background:#ffffff;border:1px solid rgba(255,255,255,0.07);border-radius:14px;padding:1.25rem;display:flex;gap:12px;align-items:flex-start;">
+      <span style="font-size:20px;flex-shrink:0;">📊</span>
+      <div>
+        <div style="font-weight:600;font-size:14px;margin-bottom:4px;">9,658 apps</div>
+        <div style="font-size:13px;color:#888898;line-height:1.5;">Dataset completo del Google Play Store con 13 variables analizadas.</div>
+      </div>
+    </div>
+    <div style="background:#ffffff;border:1px solid rgba(255,255,255,0.07);border-radius:14px;padding:1.25rem;display:flex;gap:12px;align-items:flex-start;">
+      <span style="font-size:20px;flex-shrink:0;">📱</span>
+      <div>
+        <div style="font-weight:600;font-size:14px;margin-bottom:4px;">Responsive</div>
+        <div style="font-size:13px;color:#888898;line-height:1.5;">El dashboard se adapta a cualquier tamaño de pantalla, incluyendo móvil y tablet.</div>
+      </div>
     </div>
   </div>
 </div>

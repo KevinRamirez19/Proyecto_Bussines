@@ -12,7 +12,11 @@
 
 <nav class="navbar">
   <a href="/" class="nav-brand">
-    <span class="brand-icon">▶</span>
+    <img 
+      src="{{ url_for('static', filename='img/logo.png') }}" 
+      alt="PlayAnalytics logo"
+      style="width:32px;height:32px;border-radius:20px;object-fit:cover;"
+    >
     <span>PlayAnalytics</span>
   </a>
   <ul class="nav-links">
@@ -21,6 +25,7 @@
     <li><a href="/comparacion" class="{% if request.endpoint == 'comparacion' %}active{% endif %}">Comparación</a></li>
     <li><a href="/dashboards" class="{% if request.endpoint == 'dashboards' %}active{% endif %}">Dashboard BI</a></li>
     <li><a href="/pgc" class="{% if request.endpoint == 'pgc' %}active{% endif %}">PGC</a></li>
+    <li><a href="/limpieza" class="{% if request.endpoint == 'limpieza' %}active{% endif %}">Limpieza</a></li>
   </ul>
   <button class="nav-toggle" onclick="document.querySelector('.nav-links').classList.toggle('open')">☰</button>
 </nav>
