@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Play Store Analytics{% endblock %}</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+</head>
+<body>
+
+<nav class="navbar">
+  <a href="/" class="nav-brand">
+    <span class="brand-icon">▶</span>
+    <span>PlayAnalytics</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/" class="{% if request.endpoint == 'index' %}active{% endif %}">Inicio</a></li>
+    <li><a href="/analisis" class="{% if request.endpoint == 'analisis' %}active{% endif %}">Análisis</a></li>
+    <li><a href="/comparacion" class="{% if request.endpoint == 'comparacion' %}active{% endif %}">Comparación</a></li>
+    <li><a href="/dashboards" class="{% if request.endpoint == 'dashboards' %}active{% endif %}">Dashboard BI</a></li>
+    <li><a href="/pgc" class="{% if request.endpoint == 'pgc' %}active{% endif %}">PGC</a></li>
+  </ul>
+  <button class="nav-toggle" onclick="document.querySelector('.nav-links').classList.toggle('open')">☰</button>
+</nav>
+
+<main>
+  {% block content %}{% endblock %}
+</main>
+
+<footer class="footer">
+  <div class="footer-inner">
+    <span>PlayAnalytics — Google Play Store Business Analytics</span>
+    <span>9,658 apps · 13 variables · 2018</span>
+  </div>
+</footer>
+
+{% block scripts %}{% endblock %}
+</body>
+</html>

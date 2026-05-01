@@ -1,0 +1,288 @@
+{% extends "base.html" %}
+{% block title %}PGC — PlayAnalytics{% endblock %}
+
+{% block content %}
+<div class="container section">
+
+  <!-- Header -->
+  <div class="section-head">
+    <div style="display:inline-flex;align-items:center;gap:6px;background:rgba(167,139,250,0.1);border:1px solid rgba(167,139,250,0.2);color:#a78bfa;font-size:12px;font-weight:500;letter-spacing:1px;padding:4px 12px;border-radius:20px;text-transform:uppercase;margin-bottom:1.2rem;">
+      Proyecto de Grado · Ingeniería de Sistemas
+    </div>
+    <h2>Análisis de Tendencias del Mercado Móvil Android mediante Business Analytics</h2>
+    <div class="divider"></div>
+    <p>Aplicación de técnicas de análisis de datos sobre el ecosistema Google Play Store para identificar patrones, tendencias y oportunidades de mercado.</p>
+  </div>
+
+  <!-- Ficha técnica -->
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:3rem;">
+    <div class="kpi-card"><div class="kpi-label">Dataset</div><div style="font-size:15px;font-weight:500;margin-top:4px;">Google Play Store</div><div class="kpi-sub">9,658 apps · 13 variables</div></div>
+    <div class="kpi-card"><div class="kpi-label">Herramientas</div><div style="font-size:15px;font-weight:500;margin-top:4px;">Python · Flask · Power BI</div><div class="kpi-sub">Pandas, NumPy, Chart.js</div></div>
+    <div class="kpi-card"><div class="kpi-label">Enfoque</div><div style="font-size:15px;font-weight:500;margin-top:4px;">Business Analytics</div><div class="kpi-sub">Descriptivo · Exploratorio</div></div>
+    <div class="kpi-card"><div class="kpi-label">Período</div><div style="font-size:15px;font-weight:500;margin-top:4px;">2013 – 2018</div><div class="kpi-sub">Datos históricos Android</div></div>
+  </div>
+
+  <!-- Nav secciones -->
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:2.5rem;position:sticky;top:64px;z-index:50;background:rgba(10,10,15,0.9);backdrop-filter:blur(12px);padding:12px 0;border-bottom:1px solid rgba(255,255,255,0.05);">
+    <a href="#problematica" class="pgc-nav-btn">Problemática</a>
+    <a href="#justificacion" class="pgc-nav-btn">Justificación</a>
+    <a href="#objetivos" class="pgc-nav-btn">Objetivos</a>
+    <a href="#metodologia" class="pgc-nav-btn">Metodología</a>
+    <a href="#marco" class="pgc-nav-btn">Marco Teórico</a>
+    <a href="#conclusiones" class="pgc-nav-btn">Conclusiones</a>
+  </div>
+
+  <!-- 1. PROBLEMÁTICA -->
+  <section id="problematica" class="pgc-section">
+    <div class="pgc-section-header">
+      <span class="pgc-num">01</span>
+      <div>
+        <h3 class="pgc-title">Problemática</h3>
+        <p class="pgc-sub">¿Cuál es el problema que motiva esta investigación?</p>
+      </div>
+    </div>
+    <div class="pgc-body">
+      <p>El mercado de aplicaciones móviles ha experimentado un crecimiento exponencial en la última década. Google Play Store, con más de 3 millones de aplicaciones disponibles, representa uno de los ecosistemas digitales más complejos y competitivos del mundo. Sin embargo, la mayoría de los desarrolladores y empresas que deciden incursionar en este mercado carecen de herramientas de análisis que les permitan tomar decisiones fundamentadas.</p>
+      <p>La ausencia de análisis estructurado sobre el comportamiento del mercado genera problemas concretos: desarrolladores que invierten recursos en categorías saturadas sin retorno, empresas que no identifican qué modelo de monetización es más efectivo para su nicho, e incapacidad de detectar qué factores realmente impulsan las descargas de una aplicación.</p>
+      <div class="pgc-highlight">
+        <span class="pgc-highlight-icon">?</span>
+        <div>
+          <strong>Pregunta de investigación:</strong>
+          <p style="margin:6px 0 0;">¿Qué tendencias, patrones y factores determinan el rendimiento de las aplicaciones en Google Play Store, y cómo pueden estos insights orientar decisiones estratégicas en el desarrollo y distribución de software móvil?</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. JUSTIFICACIÓN -->
+  <section id="justificacion" class="pgc-section">
+    <div class="pgc-section-header">
+      <span class="pgc-num">02</span>
+      <div>
+        <h3 class="pgc-title">Justificación</h3>
+        <p class="pgc-sub">¿Por qué es importante este análisis?</p>
+      </div>
+    </div>
+    <div class="pgc-body">
+      <p>El análisis de datos del mercado móvil tiene relevancia tanto académica como práctica. Desde la perspectiva de la Ingeniería de Sistemas, permite aplicar técnicas modernas de Business Analytics sobre un dataset real y representativo, validando metodologías de limpieza, transformación y visualización de datos.</p>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin:1.5rem 0;">
+        <div class="pgc-reason-card" style="border-left-color:#34e89e;">
+          <div class="pgc-reason-title">Relevancia económica</div>
+          <div class="pgc-reason-text">El mercado global de apps móviles supera los $430 mil millones. Entender sus dinámicas es estratégicamente valioso para cualquier empresa de software.</div>
+        </div>
+        <div class="pgc-reason-card" style="border-left-color:#4f8ef7;">
+          <div class="pgc-reason-title">Aplicación técnica</div>
+          <div class="pgc-reason-text">Permite aplicar el ciclo completo de datos: adquisición, limpieza, análisis exploratorio, visualización e interpretación con herramientas de la industria.</div>
+        </div>
+        <div class="pgc-reason-card" style="border-left-color:#a78bfa;">
+          <div class="pgc-reason-title">Toma de decisiones</div>
+          <div class="pgc-reason-text">Los resultados orientan a equipos de producto y desarrollo sobre dónde enfocar esfuerzos para maximizar adopción e impacto en el mercado.</div>
+        </div>
+        <div class="pgc-reason-card" style="border-left-color:#fbbf24;">
+          <div class="pgc-reason-title">Democratización del dato</div>
+          <div class="pgc-reason-text">Publicar el análisis como aplicación web hace el conocimiento accesible sin requerir que el usuario tenga conocimientos técnicos de datos.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. OBJETIVOS -->
+  <section id="objetivos" class="pgc-section">
+    <div class="pgc-section-header">
+      <span class="pgc-num">03</span>
+      <div>
+        <h3 class="pgc-title">Objetivos</h3>
+        <p class="pgc-sub">General y específicos del proyecto</p>
+      </div>
+    </div>
+    <div class="pgc-body">
+      <div class="pgc-obj-general">
+        <div style="font-size:11px;font-weight:500;color:#34e89e;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;">Objetivo General</div>
+        <p>Analizar el ecosistema de aplicaciones de Google Play Store mediante técnicas de Business Analytics para identificar tendencias del mercado móvil Android, patrones de comportamiento y factores que influyen en el rendimiento de las aplicaciones, presentando los resultados a través de una plataforma web interactiva.</p>
+      </div>
+      <div style="margin-top:1.5rem;">
+        <div style="font-size:11px;font-weight:500;color:#4f8ef7;letter-spacing:1px;text-transform:uppercase;margin-bottom:12px;">Objetivos Específicos</div>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <div class="pgc-obj-item"><span class="pgc-obj-num">OE1</span><span>Realizar el proceso de limpieza y preprocesamiento del dataset de Google Play Store, garantizando la calidad e integridad de los datos para el análisis posterior.</span></div>
+          <div class="pgc-obj-item"><span class="pgc-obj-num">OE2</span><span>Identificar las categorías de aplicaciones con mayor presencia y mayor volumen de instalaciones en el mercado Android.</span></div>
+          <div class="pgc-obj-item"><span class="pgc-obj-num">OE3</span><span>Determinar la relación entre el modelo de monetización (gratuito vs pago), el rating y el número de instalaciones.</span></div>
+          <div class="pgc-obj-item"><span class="pgc-obj-num">OE4</span><span>Analizar las tendencias temporales de publicación y actualización de aplicaciones entre 2013 y 2018.</span></div>
+          <div class="pgc-obj-item"><span class="pgc-obj-num">OE5</span><span>Desarrollar una plataforma web con Flask que presente los resultados del análisis de forma interactiva mediante visualizaciones dinámicas.</span></div>
+          <div class="pgc-obj-item"><span class="pgc-obj-num">OE6</span><span>Construir un dashboard en Power BI con capacidades de filtrado y exploración interactiva del dataset.</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. METODOLOGÍA -->
+  <section id="metodologia" class="pgc-section">
+    <div class="pgc-section-header">
+      <span class="pgc-num">04</span>
+      <div>
+        <h3 class="pgc-title">Metodología</h3>
+        <p class="pgc-sub">¿Cómo se desarrolló el proyecto?</p>
+      </div>
+    </div>
+    <div class="pgc-body">
+      <p>El proyecto sigue el ciclo estándar de Business Analytics, adaptado al contexto académico de Ingeniería de Sistemas. Se adoptó un enfoque cuantitativo descriptivo y exploratorio.</p>
+      <div style="display:flex;flex-direction:column;gap:12px;margin-top:1.5rem;">
+        <div class="pgc-step">
+          <div class="pgc-step-num" style="background:rgba(52,232,158,0.1);color:#34e89e;">1</div>
+          <div><div class="pgc-step-title">Adquisición y exploración inicial</div><div class="pgc-step-text">Obtención del dataset de Google Play Store (9,658 registros, 13 variables). Exploración inicial para identificar tipos de datos, valores nulos, outliers y distribuciones generales.</div></div>
+        </div>
+        <div class="pgc-step">
+          <div class="pgc-step-num" style="background:rgba(79,142,247,0.1);color:#4f8ef7;">2</div>
+          <div><div class="pgc-step-title">Limpieza y preprocesamiento</div><div class="pgc-step-text">Tratamiento de valores nulos, normalización de tipos de datos, eliminación de duplicados y transformación de variables categóricas con Python y Pandas.</div></div>
+        </div>
+        <div class="pgc-step">
+          <div class="pgc-step-num" style="background:rgba(167,139,250,0.1);color:#a78bfa;">3</div>
+          <div><div class="pgc-step-title">Análisis exploratorio (EDA)</div><div class="pgc-step-text">Cálculo de KPIs, análisis de distribuciones, correlaciones entre variables clave (rating, instalaciones, reseñas, precio), segmentación por categoría y modelo de negocio.</div></div>
+        </div>
+        <div class="pgc-step">
+          <div class="pgc-step-num" style="background:rgba(251,191,36,0.1);color:#fbbf24;">4</div>
+          <div><div class="pgc-step-title">Visualización en Power BI</div><div class="pgc-step-text">Construcción de dashboard interactivo con medidas DAX, slicers dinámicos y múltiples tipos de visualizaciones para exploración del mercado.</div></div>
+        </div>
+        <div class="pgc-step">
+          <div class="pgc-step-num" style="background:rgba(248,113,113,0.1);color:#f87171;">5</div>
+          <div><div class="pgc-step-title">Desarrollo de plataforma web</div><div class="pgc-step-text">Implementación de aplicación web con Flask como backend, APIs REST para servir los datos procesados, y Chart.js para visualizaciones interactivas en el frontend.</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. MARCO TEÓRICO -->
+  <section id="marco" class="pgc-section">
+    <div class="pgc-section-header">
+      <span class="pgc-num">05</span>
+      <div>
+        <h3 class="pgc-title">Marco Teórico</h3>
+        <p class="pgc-sub">Conceptos y fundamentos del proyecto</p>
+      </div>
+    </div>
+    <div class="pgc-body">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;">
+        <div class="pgc-theory-card">
+          <div class="pgc-theory-tag" style="color:#34e89e;background:rgba(52,232,158,0.08);">Business Analytics</div>
+          <p>Conjunto de técnicas para el análisis continuo e iterativo de datos empresariales. Incluye análisis descriptivo, diagnóstico, predictivo y prescriptivo. A diferencia del BI tradicional, busca entender el porqué y anticipar comportamientos futuros.</p>
+        </div>
+        <div class="pgc-theory-card">
+          <div class="pgc-theory-tag" style="color:#4f8ef7;background:rgba(79,142,247,0.08);">Análisis Exploratorio (EDA)</div>
+          <p>Metodología estadística introducida por Tukey (1977) para analizar conjuntos de datos resumiendo sus características principales mediante métodos visuales. Permite descubrir patrones, anomalías y relaciones antes de aplicar modelos formales.</p>
+        </div>
+        <div class="pgc-theory-card">
+          <div class="pgc-theory-tag" style="color:#a78bfa;background:rgba(167,139,250,0.08);">Ecosistema Android y Play Store</div>
+          <p>Android es el sistema operativo móvil con mayor cuota de mercado global (72%+). Google Play Store distribuye apps bajo dos modelos principales: freemium y pago directo. La calidad percibida se mide a través del rating y las reseñas de usuarios.</p>
+        </div>
+        <div class="pgc-theory-card">
+          <div class="pgc-theory-tag" style="color:#fbbf24;background:rgba(251,191,36,0.08);">Visualización de datos</div>
+          <p>Edward Tufte establece que una buena visualización debe maximizar la razón dato-tinta: mostrar la mayor información con el menor ruido visual. Herramientas como Power BI y Chart.js permiten visualizaciones interactivas y dinámicas.</p>
+        </div>
+        <div class="pgc-theory-card">
+          <div class="pgc-theory-tag" style="color:#f87171;background:rgba(248,113,113,0.08);">ETL (Extract, Transform, Load)</div>
+          <p>Proceso fundamental en ingeniería de datos que consiste en extraer datos de fuentes originales, transformarlos (limpieza, normalización) y cargarlos en un sistema destino para análisis. Implementado con Python y Pandas en este proyecto.</p>
+        </div>
+        <div class="pgc-theory-card">
+          <div class="pgc-theory-tag" style="color:#34e89e;background:rgba(52,232,158,0.08);">Arquitectura web con Flask</div>
+          <p>Flask es un microframework de Python que implementa el patrón MVC. Permite crear APIs REST ligeras que sirven datos al frontend. Actúa como capa intermedia entre el análisis de datos (Pandas) y la visualización web (Chart.js).</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6. CONCLUSIONES -->
+  <section id="conclusiones" class="pgc-section" style="margin-bottom:0;">
+    <div class="pgc-section-header">
+      <span class="pgc-num">06</span>
+      <div>
+        <h3 class="pgc-title">Conclusiones</h3>
+        <p class="pgc-sub">Hallazgos principales del análisis</p>
+      </div>
+    </div>
+    <div class="pgc-body">
+      <div style="display:flex;flex-direction:column;gap:14px;margin-bottom:2rem;">
+        <div class="pgc-conclusion">
+          <div class="pgc-conclusion-dot" style="background:#34e89e;"></div>
+          <div>
+            <strong>El modelo gratuito domina de forma abrumadora.</strong>
+            <p>El 92.2% de las apps son gratuitas, confirmando que el freemium es la estrategia dominante. El modelo de pago queda relegado a nichos muy específicos como herramientas profesionales y juegos premium.</p>
+          </div>
+        </div>
+        <div class="pgc-conclusion">
+          <div class="pgc-conclusion-dot" style="background:#4f8ef7;"></div>
+          <div>
+            <strong>Las reseñas predicen las instalaciones mejor que el rating.</strong>
+            <p>Se encontró correlación r=0.625 entre reseñas e instalaciones, mientras que la correlación rating-instalaciones es moderada. El volumen de engagement es más indicativo de popularidad que la calificación promedio.</p>
+          </div>
+        </div>
+        <div class="pgc-conclusion">
+          <div class="pgc-conclusion-dot" style="background:#a78bfa;"></div>
+          <div>
+            <strong>Comunicación lidera en instalaciones promedio, no en cantidad.</strong>
+            <p>Aunque FAMILY tiene más apps (1,831), COMMUNICATION lidera con 35M de instalaciones promedio. Pocas apps con enorme tracción concentran la mayor parte de las descargas del mercado.</p>
+          </div>
+        </div>
+        <div class="pgc-conclusion">
+          <div class="pgc-conclusion-dot" style="background:#fbbf24;"></div>
+          <div>
+            <strong>El pico de actividad del ecosistema fue 2017–2018.</strong>
+            <p>La tendencia temporal muestra mayor cantidad de apps actualizadas en 2017–2018, reflejando la maduración del ecosistema Android y el aumento de equipos que mantienen activamente sus productos.</p>
+          </div>
+        </div>
+        <div class="pgc-conclusion">
+          <div class="pgc-conclusion-dot" style="background:#f87171;"></div>
+          <div>
+            <strong>Business Analytics como herramienta estratégica en Ingeniería de Sistemas.</strong>
+            <p>Este proyecto demuestra que combinar habilidades técnicas (Python, Flask, APIs) con pensamiento analítico permite generar valor de negocio real. Transformar datos crudos en decisiones accionables es una competencia diferenciadora en el mercado laboral actual.</p>
+          </div>
+        </div>
+      </div>
+
+      <div style="background:#18181f;border:1px solid rgba(255,255,255,0.07);border-radius:14px;padding:1.75rem;">
+        <div style="font-size:11px;font-weight:500;color:#a78bfa;letter-spacing:1px;text-transform:uppercase;margin-bottom:12px;">Recomendaciones</div>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <div style="display:flex;gap:10px;font-size:14px;color:#c8c8d8;"><span style="color:#34e89e;flex-shrink:0;margin-top:2px;">→</span><span>Para nuevos desarrolladores: enfocarse en categorías de alta instalación promedio (COMMUNICATION, TOOLS, PRODUCTIVITY) en lugar de las más pobladas.</span></div>
+          <div style="display:flex;gap:10px;font-size:14px;color:#c8c8d8;"><span style="color:#34e89e;flex-shrink:0;margin-top:2px;">→</span><span>Mantener las apps actualizadas activamente — los datos muestran correlación entre frecuencia de actualización y visibilidad en la tienda.</span></div>
+          <div style="display:flex;gap:10px;font-size:14px;color:#c8c8d8;"><span style="color:#34e89e;flex-shrink:0;margin-top:2px;">→</span><span>Incentivar reseñas de usuario como estrategia de crecimiento, dado su mayor impacto en instalaciones frente al rating puro.</span></div>
+          <div style="display:flex;gap:10px;font-size:14px;color:#c8c8d8;"><span style="color:#34e89e;flex-shrink:0;margin-top:2px;">→</span><span>Para trabajos futuros: incorporar análisis de sentimiento sobre reseñas textuales y modelos predictivos con Machine Learning.</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<style>
+.pgc-nav-btn { padding:7px 16px;border-radius:20px;font-size:13px;color:#888898;text-decoration:none;border:1px solid rgba(255,255,255,0.08);transition:all 0.2s; }
+.pgc-nav-btn:hover { color:#f0f0f5;background:#18181f;border-color:rgba(255,255,255,0.15); }
+.pgc-section { margin-bottom:3.5rem; }
+.pgc-section-header { display:flex;gap:20px;align-items:flex-start;margin-bottom:1.5rem; }
+.pgc-num { font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:#a78bfa;background:rgba(167,139,250,0.1);border:1px solid rgba(167,139,250,0.2);padding:6px 12px;border-radius:8px;flex-shrink:0;margin-top:4px; }
+.pgc-title { font-family:'Syne',sans-serif;font-size:22px;font-weight:700;margin-bottom:4px; }
+.pgc-sub { font-size:13px;color:#888898; }
+.pgc-body { background:#111118;border:1px solid rgba(255,255,255,0.06);border-radius:16px;padding:2rem; }
+.pgc-body p { color:#c8c8d8;font-size:15px;line-height:1.75;margin-bottom:1rem; }
+.pgc-body p:last-child { margin-bottom:0; }
+.pgc-highlight { display:flex;gap:14px;align-items:flex-start;background:rgba(167,139,250,0.06);border:1px solid rgba(167,139,250,0.15);border-radius:12px;padding:1.25rem;margin-top:1.25rem; }
+.pgc-highlight-icon { width:32px;height:32px;border-radius:50%;background:rgba(167,139,250,0.15);color:#a78bfa;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;flex-shrink:0; }
+.pgc-highlight strong { color:#f0f0f5;font-size:14px; }
+.pgc-highlight p { color:#c8c8d8;font-size:14px;line-height:1.65;margin:0; }
+.pgc-reason-card { background:#18181f;border:1px solid rgba(255,255,255,0.06);border-left:3px solid;border-radius:12px;padding:1.25rem; }
+.pgc-reason-title { font-weight:600;font-size:14px;margin-bottom:6px; }
+.pgc-reason-text { font-size:13px;color:#888898;line-height:1.6; }
+.pgc-obj-general { background:rgba(52,232,158,0.05);border:1px solid rgba(52,232,158,0.15);border-radius:12px;padding:1.25rem; }
+.pgc-obj-general p { color:#c8c8d8;font-size:15px;line-height:1.75;margin:0; }
+.pgc-obj-item { display:flex;gap:12px;align-items:flex-start;background:#18181f;border:1px solid rgba(255,255,255,0.06);border-radius:10px;padding:1rem 1.25rem;font-size:14px;color:#c8c8d8;line-height:1.6; }
+.pgc-obj-num { background:rgba(79,142,247,0.12);color:#4f8ef7;font-size:11px;font-weight:600;padding:3px 8px;border-radius:6px;flex-shrink:0;margin-top:2px; }
+.pgc-step { display:flex;gap:16px;align-items:flex-start;background:#18181f;border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:1.25rem; }
+.pgc-step-num { width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:700;font-size:15px;flex-shrink:0; }
+.pgc-step-title { font-weight:600;font-size:15px;margin-bottom:6px; }
+.pgc-step-text { font-size:13px;color:#888898;line-height:1.6; }
+.pgc-theory-card { background:#18181f;border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:1.25rem; }
+.pgc-theory-tag { font-size:11px;font-weight:600;letter-spacing:0.5px;padding:3px 10px;border-radius:6px;display:inline-block;margin-bottom:10px; }
+.pgc-theory-card p { font-size:13px;color:#888898;line-height:1.65;margin:0; }
+.pgc-conclusion { display:flex;gap:14px;align-items:flex-start;background:#18181f;border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:1.25rem; }
+.pgc-conclusion-dot { width:10px;height:10px;border-radius:50%;flex-shrink:0;margin-top:6px; }
+.pgc-conclusion strong { font-size:15px;display:block;margin-bottom:6px; }
+.pgc-conclusion p { font-size:13px;color:#888898;line-height:1.65;margin:0; }
+</style>
+{% endblock %}

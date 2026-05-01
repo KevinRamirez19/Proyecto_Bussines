@@ -1,0 +1,174 @@
+{% extends "base.html" %}
+{% block title %}Análisis — PlayAnalytics{% endblock %}
+
+{% block content %}
+<div class="container section">
+  <div class="section-head">
+    <h2>Análisis completo</h2>
+    <div class="divider"></div>
+    <p>Exploración detallada de ratings, instalaciones, categorías y tendencias temporales.</p>
+  </div>
+
+  <!-- KPIs -->
+  <div class="kpi-grid" id="kpi-grid">
+    <div class="kpi-card"><div class="kpi-label">Total Apps</div><div class="kpi-value accent" id="k-total">—</div></div>
+    <div class="kpi-card"><div class="kpi-label">Rating Promedio</div><div class="kpi-value blue" id="k-rating">—</div></div>
+    <div class="kpi-card"><div class="kpi-label">Instalaciones Totales</div><div class="kpi-value purple" id="k-installs">—</div></div>
+    <div class="kpi-card"><div class="kpi-label">Apps Gratuitas</div><div class="kpi-value amber" id="k-free">—</div></div>
+  </div>
+
+  <!-- Fila 1 -->
+  <div class="charts-grid">
+    <div class="chart-card">
+      <div class="chart-title">Top 15 categorías — número de apps</div>
+      <div class="chart-sub">¿Qué categorías tienen más aplicaciones?</div>
+      <div class="chart-wrap"><canvas id="chartCats"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Top 10 categorías — instalaciones totales</div>
+      <div class="chart-sub">¿Cuáles dominan el mercado por descargas?</div>
+      <div class="chart-wrap"><canvas id="chartInst"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Fila 2 -->
+  <div class="charts-grid">
+    <div class="chart-card">
+      <div class="chart-title">Distribución de ratings</div>
+      <div class="chart-sub">¿Cómo se distribuyen las calificaciones?</div>
+      <div class="chart-wrap"><canvas id="chartRating"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Apps actualizadas por año</div>
+      <div class="chart-sub">Tendencia de actividad 2013 – 2018</div>
+      <div class="chart-wrap"><canvas id="chartYears"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Fila 3 -->
+  <div class="charts-grid-3">
+    <div class="chart-card">
+      <div class="chart-title">Gratis vs Pago</div>
+      <div class="chart-sub">Modelo de negocio</div>
+      <div class="chart-wrap-sm"><canvas id="chartDonut"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Clasificación de contenido</div>
+      <div class="chart-sub">Por audiencia objetivo</div>
+      <div class="chart-wrap-sm"><canvas id="chartContent"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Rating por rango</div>
+      <div class="chart-sub">Concentración de la calidad</div>
+      <div class="chart-wrap-sm"><canvas id="chartRatingPie"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Tabla Top Apps -->
+  <div class="section-head" style="margin-top:3rem;">
+    <h2>Top 10 apps por instalaciones</h2>
+    <div class="divider"></div>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>App</th><th>Categoría</th><th>Rating</th><th>Instalaciones</th></tr>
+      </thead>
+      <tbody id="top-apps-tbody"></tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const ACCENT='#34e89e',BLUE='#4f8ef7',PURPLE='#a78bfa',AMBER='#fbbf24',RED='#f87171';
+const grid='rgba(255,255,255,0.05)';
+Chart.defaults.color='#888898';
+Chart.defaults.font.family="'DM Sans',sans-serif";
+
+fetch('/api/kpis').then(r=>r.json()).then(d=>{
+  document.getElementById('k-total').textContent=(d.total_apps).toLocaleString();
+  document.getElementById('k-rating').textContent=d.avg_rating;
+  document.getElementById('k-installs').textContent=(d.total_installs/1e9).toFixed(1)+'B';
+  document.getElementById('k-free').textContent=d.free_pct+'%';
+});
+
+// Top 15 categorías
+fetch('/api/categorias').then(r=>r.json()).then(data=>{
+  new Chart(document.getElementById('chartCats'),{
+    type:'bar',
+    data:{labels:data.map(d=>d.category),datasets:[{data:data.map(d=>d.count),backgroundColor:ACCENT+'88',borderColor:ACCENT,borderWidth:1,borderRadius:4}]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+      scales:{x:{grid:{color:grid}},y:{grid:{display:false},ticks:{font:{size:10}}}}}
+  });
+});
+
+// Instalaciones por cat
+fetch('/api/instalaciones_categoria').then(r=>r.json()).then(data=>{
+  new Chart(document.getElementById('chartInst'),{
+    type:'bar',
+    data:{labels:data.map(d=>d.category),datasets:[{data:data.map(d=>d.installs_b),backgroundColor:BLUE+'88',borderColor:BLUE,borderWidth:1,borderRadius:4,label:'Billones'}]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+      scales:{x:{grid:{color:grid},title:{display:true,text:'Instalaciones (B)',color:'#888898'}},y:{grid:{display:false},ticks:{font:{size:10}}}}}
+  });
+});
+
+// Rating dist
+fetch('/api/rating_dist').then(r=>r.json()).then(data=>{
+  const colors=[RED+'cc',AMBER+'cc',BLUE+'cc',ACCENT+'cc',PURPLE+'cc'];
+  new Chart(document.getElementById('chartRating'),{
+    type:'bar',
+    data:{labels:data.map(d=>d.rango),datasets:[{data:data.map(d=>d.cantidad),backgroundColor:colors,borderRadius:6}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+      scales:{x:{grid:{display:false}},y:{grid:{color:grid}}}}
+  });
+  new Chart(document.getElementById('chartRatingPie'),{
+    type:'doughnut',
+    data:{labels:data.map(d=>d.rango),datasets:[{data:data.map(d=>d.cantidad),backgroundColor:colors,borderColor:'#111118',borderWidth:2}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'55%',plugins:{legend:{position:'bottom',labels:{font:{size:11},padding:8}}}}
+  });
+});
+
+// Años
+fetch('/api/por_anio').then(r=>r.json()).then(data=>{
+  new Chart(document.getElementById('chartYears'),{
+    type:'line',
+    data:{labels:data.map(d=>d.year),datasets:[{data:data.map(d=>d.count),borderColor:PURPLE,backgroundColor:PURPLE+'22',fill:true,tension:0.4,pointBackgroundColor:PURPLE,pointRadius:5}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+      scales:{x:{grid:{color:grid}},y:{grid:{color:grid}}}}
+  });
+});
+
+// Free vs Paid
+fetch('/api/free_vs_paid').then(r=>r.json()).then(d=>{
+  new Chart(document.getElementById('chartDonut'),{
+    type:'doughnut',
+    data:{labels:['Gratis','Pago'],datasets:[{data:[d.gratis,d.pago],backgroundColor:[ACCENT+'cc',AMBER+'cc'],borderColor:[ACCENT,AMBER],borderWidth:2}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'65%',plugins:{legend:{position:'bottom',labels:{color:'#ccc',padding:14}}}}
+  });
+});
+
+// Content Rating
+fetch('/api/content_rating').then(r=>r.json()).then(data=>{
+  new Chart(document.getElementById('chartContent'),{
+    type:'bar',
+    data:{labels:data.map(d=>d.label),datasets:[{data:data.map(d=>d.count),backgroundColor:[ACCENT+'99',BLUE+'99',AMBER+'99',PURPLE+'99',RED+'99'],borderRadius:6}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+      scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{grid:{color:grid}}}}
+  });
+});
+
+// Top apps table
+fetch('/api/top_apps').then(r=>r.json()).then(data=>{
+  const tbody=document.getElementById('top-apps-tbody');
+  tbody.innerHTML=data.map(d=>`
+    <tr>
+      <td>${d.App}</td>
+      <td>${d.Category}</td>
+      <td>${d.Rating} ⭐</td>
+      <td>${d.Installs_fmt}</td>
+    </tr>`).join('');
+});
+</script>
+{% endblock %}

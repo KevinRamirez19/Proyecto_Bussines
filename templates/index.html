@@ -1,11 +1,94 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Papu esto funciona</title>
-</head>
-<body>
-    
-</body>
-</html>
+{% extends "base.html" %}
+{% block title %}Inicio — PlayAnalytics{% endblock %}
+
+{% block content %}
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-tag">● Business Analytics · Google Play Store</div>
+  <h1>Datos que <span>transforman</span><br>decisiones</h1>
+  <p>Análisis completo de 9,658 aplicaciones del ecosistema Android. KPIs, tendencias de mercado y visualizaciones interactivas.</p>
+  <div class="hero-btns">
+    <a href="/analisis" class="btn btn-primary">Ver análisis completo</a>
+    <a href="/dashboards" class="btn btn-outline">Dashboard Power BI</a>
+  </div>
+</section>
+
+<!-- KPIs -->
+<div class="container">
+  <div class="kpi-grid" id="kpi-grid">
+    <div class="kpi-card"><div class="kpi-label">Total Apps</div><div class="kpi-value accent" id="k-total">—</div><div class="kpi-sub">apps analizadas</div></div>
+    <div class="kpi-card"><div class="kpi-label">Rating Promedio</div><div class="kpi-value blue" id="k-rating">—</div><div class="kpi-sub">sobre 5.0</div></div>
+    <div class="kpi-card"><div class="kpi-label">Instalaciones</div><div class="kpi-value purple" id="k-installs">—</div><div class="kpi-sub">instalaciones totales</div></div>
+    <div class="kpi-card"><div class="kpi-label">Apps Gratuitas</div><div class="kpi-value amber" id="k-free">—</div><div class="kpi-sub">del total</div></div>
+    <div class="kpi-card"><div class="kpi-label">Categorías</div><div class="kpi-value accent" id="k-cats">—</div><div class="kpi-sub">categorías únicas</div></div>
+    <div class="kpi-card"><div class="kpi-label">Apps de Pago</div><div class="kpi-value blue" id="k-paid">—</div><div class="kpi-sub">con precio</div></div>
+  </div>
+
+  <!-- Preview charts -->
+  <div class="section-head" style="margin-top:3rem;">
+    <h2>Vista general del mercado</h2>
+    <div class="divider"></div>
+    <p>Las categorías con más presencia y la distribución de modelos de negocio.</p>
+  </div>
+
+  <div class="charts-grid">
+    <div class="chart-card">
+      <div class="chart-title">Top 10 categorías por apps</div>
+      <div class="chart-sub">Número de aplicaciones por categoría</div>
+      <div class="chart-wrap"><canvas id="chartCats"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Gratis vs Pago</div>
+      <div class="chart-sub">Distribución del modelo de negocio</div>
+      <div class="chart-wrap"><canvas id="chartDonut"></canvas></div>
+    </div>
+  </div>
+
+  <div style="text-align:center; padding: 2rem 0 4rem;">
+    <a href="/analisis" class="btn btn-primary">Ver análisis completo →</a>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const ACCENT = '#34e89e', BLUE = '#4f8ef7', PURPLE = '#a78bfa', AMBER = '#fbbf24';
+const gridColor = 'rgba(255,255,255,0.05)';
+Chart.defaults.color = '#888898';
+Chart.defaults.font.family = "'DM Sans', sans-serif";
+
+// KPIs
+fetch('/api/kpis').then(r=>r.json()).then(d=>{
+  document.getElementById('k-total').textContent    = d.total_apps.toLocaleString();
+  document.getElementById('k-rating').textContent   = d.avg_rating;
+  document.getElementById('k-installs').textContent = (d.total_installs/1e9).toFixed(1)+'B';
+  document.getElementById('k-free').textContent     = d.free_pct+'%';
+  document.getElementById('k-cats').textContent     = d.total_categories;
+  document.getElementById('k-paid').textContent     = d.paid_apps.toLocaleString();
+});
+
+// Categorías bar
+fetch('/api/categorias').then(r=>r.json()).then(data=>{
+  const top10 = data.slice(0,10);
+  new Chart(document.getElementById('chartCats'), {
+    type: 'bar',
+    data: {
+      labels: top10.map(d=>d.category),
+      datasets:[{ data: top10.map(d=>d.count), backgroundColor: ACCENT+'99', borderColor: ACCENT, borderWidth:1, borderRadius:4 }]
+    },
+    options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}},
+      scales:{ x:{ grid:{color:gridColor}, ticks:{color:'#888898'} }, y:{ grid:{display:false}, ticks:{color:'#ccc',font:{size:11}} } } }
+  });
+});
+
+// Donut
+fetch('/api/free_vs_paid').then(r=>r.json()).then(d=>{
+  new Chart(document.getElementById('chartDonut'), {
+    type:'doughnut',
+    data:{ labels:['Gratis','Pago'], datasets:[{ data:[d.gratis,d.pago], backgroundColor:[ACCENT+'cc', AMBER+'cc'], borderColor:[ACCENT,AMBER], borderWidth:2 }] },
+    options:{ responsive:true, maintainAspectRatio:false, cutout:'65%',
+      plugins:{ legend:{ position:'bottom', labels:{color:'#ccc',padding:16,font:{size:13}} } } }
+  });
+});
+</script>
+{% endblock %}

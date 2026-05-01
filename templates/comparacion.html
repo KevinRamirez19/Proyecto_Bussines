@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+{% block title %}Comparación — PlayAnalytics{% endblock %}
+
+{% block content %}
+<div class="container section">
+  <div class="section-head">
+    <h2>Comparación de apps</h2>
+    <div class="divider"></div>
+    <p>Explora y filtra las apps. Busca por nombre o filtra por tipo.</p>
+  </div>
+
+  <!-- Filtros -->
+  <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:1.5rem;align-items:center;">
+    <input type="text" id="search-input" placeholder="Buscar app..." 
+      style="padding:9px 14px;border-radius:10px;border:1px solid rgba(255,255,255,0.1);background:#111118;color:#f0f0f5;font-size:14px;flex:1;min-width:200px;outline:none;">
+    
+    <select id="tipo-filter"
+      style="padding:9px 14px;border-radius:10px;border:1px solid rgba(255,255,255,0.1);background:#111118;color:#f0f0f5;font-size:14px;cursor:pointer;">
+      <option value="">Todos los tipos</option>
+      <option value="Gratis">Gratis</option>
+      <option value="Pago">Pago</option>
+    </select>
+
+    <span id="count-label" style="font-size:13px;color:#888898;white-space:nowrap;"></span>
+  </div>
+
+  <!-- Tabla -->
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>App</th>
+          <th>Categoría</th>
+          <th>Rating</th>
+          <th>Instalaciones</th>
+          <th>Tipo</th>
+          <th>Precio</th>
+          <th>Audiencia</th>
+        </tr>
+      </thead>
+      <tbody id="tabla-body"></tbody>
+    </table>
+  </div>
+
+  <!-- Paginación -->
+  <div id="pagination" style="margin-top:15px;display:flex;gap:8px;justify-content:center;"></div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let allData = [];
+let filteredData = [];
+let currentPage = 1;
+const rowsPerPage = 50;
+
+// 🔹 Cargar datos
+fetch('/api/tabla')
+  .then(r => r.json())
+  .then(data => {
+    allData = data;
+    filteredData = data;
+    render(filteredData);
+  });
+
+// 🔹 Render tabla
+function render(data){
+  const tbody = document.getElementById('tabla-body');
+
+  const start = (currentPage - 1) * rowsPerPage;
+  const end = start + rowsPerPage;
+  const pageData = data.slice(start, end);
+
+  document.getElementById('count-label').textContent = data.length + ' apps';
+
+  tbody.innerHTML = pageData.map(d => {
+    const rating = d.Rating ?? 0;
+
+    return `
+    <tr>
+      <td style="font-weight:500;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${d.App}">
+        ${d.App}
+      </td>
+      <td style="color:#888898;font-size:13px;">${d['Category']}</td>
+      <td>
+        <span style="color:${rating>=4.5?'#34e89e':rating>=3.5?'#fbbf24':'#f87171'};font-weight:500;">
+          ${rating} ★
+        </span>
+      </td>
+      <td style="font-family:'Syne',sans-serif;font-size:13px;">${d['Installs_fmt']}</td>
+      <td><span class="badge ${d.Tipo==='Gratis'?'badge-free':'badge-paid'}">${d.Tipo}</span></td>
+      <td style="color:#888898;">${d.Price > 0 ? '$'+d.Price : '—'}</td>
+      <td style="font-size:12px;color:#888898;">${d['Content Rating']}</td>
+    </tr>`;
+  }).join('');
+
+  renderPagination(data.length);
+}
+
+// 🔹 Render botones
+function renderPagination(total){
+  const totalPages = Math.ceil(total / rowsPerPage);
+  const container = document.getElementById('pagination');
+
+  let buttons = '';
+
+  // ⬅️ anterior
+  buttons += `<button onclick="changePage(${currentPage-1})" ${currentPage===1?'disabled':''}>⬅️</button>`;
+
+  // números
+  for(let i = 1; i <= totalPages; i++){
+    buttons += `
+      <button onclick="changePage(${i})"
+        style="padding:6px 10px;border-radius:6px;border:none;cursor:pointer;
+        ${i===currentPage?'background:#34e89e;color:#000;font-weight:bold;':'background:#1a1a22;color:#fff;'}">
+        ${i}
+      </button>`;
+  }
+
+  // ➡️ siguiente
+  buttons += `<button onclick="changePage(${currentPage+1})" ${currentPage===totalPages?'disabled':''}>➡️</button>`;
+
+  container.innerHTML = buttons;
+}
+
+// 🔹 Cambiar página
+function changePage(page){
+  const totalPages = Math.ceil(filteredData.length / rowsPerPage);
+
+  if(page < 1 || page > totalPages) return;
+
+  currentPage = page;
+  render(filteredData);
+}
+
+// 🔹 Filtro
+function filter(){
+  const q = document.getElementById('search-input').value.toLowerCase();
+  const tipo = document.getElementById('tipo-filter').value;
+
+  filteredData = allData.filter(d =>
+    d.App.toLowerCase().includes(q) &&
+    (tipo === '' || d.Tipo === tipo)
+  );
+
+  currentPage = 1;
+  render(filteredData);
+}
+
+// Eventos
+document.getElementById('search-input').addEventListener('input', filter);
+document.getElementById('tipo-filter').addEventListener('change', filter);
+</script>
+{% endblock %}
