@@ -107,13 +107,22 @@ def api_content_rating():
 @app.route('/api/tabla')
 def api_tabla():
     df = load_data()
+    
     sample = df[['App', 'Category', 'Rating', 'Installs', 'Type', 'Price', 'Content Rating']].copy()
+
     sample['Category'] = sample['Category'].str.replace('_', ' ').str.title()
     sample['Tipo'] = sample['Type'].map({True: 'Pago', False: 'Gratis'})
     sample = sample.drop(columns=['Type'])
+
     sample['Installs_fmt'] = sample['Installs'].apply(
-        lambda x: f"{x/1e9:.1f}B" if x >= 1e9 else (f"{x/1e6:.0f}M" if x >= 1e6 else f"{x/1e3:.0f}K"))
+        lambda x: f"{x/1e9:.1f}B" if x >= 1e9 else (f"{x/1e6:.0f}M" if x >= 1e6 else f"{x/1e3:.0f}K")
+    )
+
     sample = sample.head(200)
+
+    # 🔥 SOLUCIÓN CLAVE
+    sample = sample.replace({np.nan: None})
+
     return jsonify(sample[['App','Category','Rating','Installs_fmt','Tipo','Price','Content Rating']].to_dict('records'))
 
 if __name__ == '__main__':
