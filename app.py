@@ -14,7 +14,7 @@ RAW_PATH  = os.path.join('data', 'raw', 'googleplaystore.csv')
 
 def load_data():
     df = pd.read_excel(DATA_PATH)
-    df['IsFree'] = ~df['Type']          # True = es de pago → ojo al mapear
+    df['IsFree'] = df['Type'] == False
     df['Last Updated'] = pd.to_datetime(df['Last Updated'])
     df['Year'] = df['Last Updated'].dt.year
     return df
@@ -213,19 +213,32 @@ def style_ax(ax, fig):
 def grafica_nulos():
     df_raw   = pd.read_csv(RAW_PATH)
     df_clean = pd.read_excel(DATA_PATH)
-
-    nulos_antes  = df_raw.isnull().sum().sort_values(ascending=False)
-    nulos_despues = df_clean.reindex(columns=df_raw.columns).isnull().sum().reindex(nulos_antes.index).fillna(0)
-
+ 
+    cols_comunes  = [c for c in df_raw.columns if c in df_clean.columns]
+    nulos_antes   = df_raw[cols_comunes].isnull().sum().sort_values(ascending=False)
+    nulos_despues = df_clean[cols_comunes].isnull().sum().reindex(nulos_antes.index).fillna(0)
+ 
     fig, ax = plt.subplots(figsize=(9, 4))
     style_ax(ax, fig)
     x = range(len(nulos_antes))
     w = 0.38
-    ax.bar([i - w/2 for i in x], nulos_antes.values,  width=w, color=RED+'bb',   label='Antes',   linewidth=0)
-    ax.bar([i + w/2 for i in x], nulos_despues.values, width=w, color=ACCENT+'bb', label='Después', linewidth=0)
+    bars_a = ax.bar([i - w/2 for i in x], nulos_antes.values,   width=w, color=RED+'bb',    label='Antes',   linewidth=0)
+    bars_d = ax.bar([i + w/2 for i in x], nulos_despues.values,  width=w, color=ACCENT+'bb', label='Después', linewidth=0)
     ax.set_xticks(list(x))
     ax.set_xticklabels(nulos_antes.index, rotation=35, ha='right', fontsize=8.5, color=MUTED)
     ax.set_ylabel('Valores nulos', color=MUTED, fontsize=9)
+ 
+    # Anotación explicando que los nulos de Rating son intencionales
+    rating_idx = list(nulos_antes.index).index('Rating') if 'Rating' in nulos_antes.index else None
+    if rating_idx is not None:
+        ax.annotate(
+            '★ Nulos conservados\nintencionalm. (sin rating)',
+            xy=(rating_idx, nulos_despues['Rating']),
+            xytext=(rating_idx + 1.2, nulos_despues['Rating'] * 0.85),
+            fontsize=7.5, color=ACCENT, style='italic',
+            arrowprops=dict(arrowstyle='->', color=ACCENT, lw=0.8)
+        )
+ 
     ax.legend(facecolor=BG3, edgecolor='#ffffff15', labelcolor=TEXT, fontsize=9)
     fig.tight_layout()
     return jsonify({'img': fig_to_b64(fig)})
@@ -235,54 +248,99 @@ def grafica_nulos():
 def grafica_rating():
     df_raw   = pd.read_csv(RAW_PATH)
     df_clean = pd.read_excel(DATA_PATH)
-
-    r_antes  = pd.to_numeric(df_raw['Rating'],   errors='coerce').dropna()
+ 
+    r_antes   = pd.to_numeric(df_raw['Rating'],   errors='coerce').dropna()
     r_despues = pd.to_numeric(df_clean['Rating'], errors='coerce').dropna()
-
+ 
     fig, axes = plt.subplots(1, 2, figsize=(9, 4))
-    for ax, data, color, label in zip(
-        axes,
-        [r_antes, r_despues],
-        [RED, ACCENT],
-        ['Antes (CSV crudo)', 'Después (limpio)']
-    ):
+ 
+    configs = [
+        (r_antes,   RED,    'Antes (CSV crudo)'),
+        (r_despues, ACCENT, 'Después (limpio)'),
+    ]
+ 
+    for ax, (data, color, label) in zip(axes, configs):
         style_ax(ax, fig)
-        ax.hist(data, bins=20, color=color+'bb', edgecolor='none', linewidth=0)
+ 
+        # Outliers: valores fuera del rango válido (> 5.0)
+        outliers = int((data > 5.0).sum())
+        # Graficar SOLO datos válidos — el outlier NO entra al histograma
+        datos_validos = data[data <= 5.0]
+ 
+        ax.hist(datos_validos, bins=20, color=color+'bb', edgecolor='none', linewidth=0)
+        ax.set_xlim(0, 5.5)
         ax.set_title(label, color=TEXT, fontsize=10, pad=8)
         ax.set_xlabel('Rating', color=MUTED, fontsize=9)
         ax.set_ylabel('Apps', color=MUTED, fontsize=9)
-        ax.axvline(data.mean(), color='#ffffff55', linestyle='--', linewidth=1)
-
+        ax.axvline(datos_validos.mean(), color='#ffffff88', linestyle='--', linewidth=1)
+ 
+        # Anotación de outliers solo si los hay (panel "Antes")
+        if outliers:
+            ax.annotate(
+                f'{outliers} outlier(s) > 5.0\n(excluido del histograma)',
+                xy=(0.97, 0.97), xycoords='axes fraction',
+                ha='right', va='top', fontsize=7.5,
+                color=RED, style='italic',
+                bbox=dict(boxstyle='round,pad=0.3', facecolor='#f871711a',
+                        edgecolor=RED+'55', linewidth=0.8)
+            )
+ 
     fig.tight_layout()
     return jsonify({'img': fig_to_b64(fig)})
+
 
 
 @app.route('/api/limpieza/graficas/precios')
 def grafica_precios():
     df_raw   = pd.read_csv(RAW_PATH)
     df_clean = pd.read_excel(DATA_PATH)
-
-    # Antes: limpiar manualmente para comparar
-    p_antes = df_raw['Price'].str.replace('$', '', regex=False)
-    p_antes = pd.to_numeric(p_antes, errors='coerce').dropna()
-    p_antes = p_antes[p_antes > 0]  # solo de pago
-
+ 
+    # Solo apps de PAGO en el CSV crudo (excluye precio "0" = gratis)
+    raw_prices_pago = df_raw['Price'].dropna().astype(str)
+    raw_prices_pago = raw_prices_pago[raw_prices_pago.str.strip() != '0']
+ 
+    def clasificar(v):
+        v = v.strip()
+        if v.startswith('$'):
+            try:
+                float(v[1:])
+                return 'Con signo $ válido'
+            except ValueError:
+                return 'Con $ pero inválido'
+        try:
+            float(v)
+            return 'Número sin $'
+        except ValueError:
+            return 'Texto / NaN'
+ 
+    categorias = raw_prices_pago.apply(clasificar).value_counts()
+    colores_cat = [AMBER, '#f59e0b', RED, '#fcd34d'][:len(categorias)]
+ 
+    fig, axes = plt.subplots(1, 2, figsize=(9, 4))
+ 
+    # Panel izquierdo: formatos de apps de PAGO en el CSV crudo
+    ax0 = axes[0]
+    style_ax(ax0, fig)
+    bars = ax0.bar(range(len(categorias)), categorias.values,
+                   color=colores_cat, edgecolor='none', linewidth=0)
+    ax0.set_xticks(range(len(categorias)))
+    ax0.set_xticklabels(categorias.index, rotation=20, ha='right', fontsize=8.5, color=MUTED)
+    ax0.set_title('Precios antes — apps de pago (formatos CSV)', color=TEXT, fontsize=10, pad=8)
+    ax0.set_ylabel('Cantidad de apps', color=MUTED, fontsize=9)
+    for bar, val in zip(bars, categorias.values):
+        ax0.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 5,
+                 str(val), ha='center', fontsize=8.5, color=MUTED)
+ 
+    # Panel derecho: histograma numérico limpio (solo de pago)
+    ax1 = axes[1]
+    style_ax(ax1, fig)
     p_despues = pd.to_numeric(df_clean['Price'], errors='coerce').dropna()
     p_despues = p_despues[p_despues > 0]
-
-    fig, axes = plt.subplots(1, 2, figsize=(9, 4))
-    for ax, data, color, label in zip(
-        axes,
-        [p_antes, p_despues],
-        [AMBER, ACCENT],
-        ['Precios antes (string)', 'Precios después (float)']
-    ):
-        style_ax(ax, fig)
-        ax.hist(data.clip(upper=30), bins=25, color=color+'bb', edgecolor='none')
-        ax.set_title(label, color=TEXT, fontsize=10, pad=8)
-        ax.set_xlabel('Precio USD (cap. $30)', color=MUTED, fontsize=9)
-        ax.set_ylabel('Apps', color=MUTED, fontsize=9)
-
+    ax1.hist(p_despues.clip(upper=30), bins=25, color=ACCENT+'bb', edgecolor='none')
+    ax1.set_title('Precios después — apps de pago (float limpio)', color=TEXT, fontsize=10, pad=8)
+    ax1.set_xlabel('Precio USD (cap. $30)', color=MUTED, fontsize=9)
+    ax1.set_ylabel('Apps', color=MUTED, fontsize=9)
+ 
     fig.tight_layout()
     return jsonify({'img': fig_to_b64(fig)})
 
