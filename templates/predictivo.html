@@ -1,0 +1,229 @@
+{% extends "base.html" %}
+{% block title %}Análisis Predictivo — PlayAnalytics{% endblock %}
+
+{% block content %}
+<div class="container section">
+
+  <!-- Encabezado -->
+  <div class="section-head">
+    <div style="display:inline-flex;align-items:center;gap:6px;
+                background:rgba(124,58,237,0.08);border:1px solid rgba(124,58,237,0.2);
+                color:var(--purple);font-size:12px;font-weight:500;letter-spacing:1px;
+                padding:4px 12px;border-radius:20px;text-transform:uppercase;margin-bottom:1.2rem;">
+      Machine Learning · Scikit-learn
+    </div>
+    <h2>Análisis Predictivo</h2>
+    <div class="divider"></div>
+    <p>Modelos entrenados con los datos reales del dataset: regresión de rating, clasificación de instalaciones y clustering K-Means.</p>
+  </div>
+
+  <!-- ── KPIs de modelos ─────────────────────────────────────────────────── -->
+  <div class="kpi-grid" style="margin-bottom:3rem;">
+    <div class="kpi-card">
+      <div class="kpi-label">R² — Predicción Rating</div>
+      <div class="kpi-value accent" id="m-r2">—</div>
+      <div class="kpi-sub">Random Forest Regressor</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">RMSE Rating</div>
+      <div class="kpi-value blue" id="m-rmse">—</div>
+      <div class="kpi-sub">Error medio del modelo</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Accuracy — Installs</div>
+      <div class="kpi-value purple" id="m-acc">—</div>
+      <div class="kpi-sub">Random Forest Classifier</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Clusters K-Means</div>
+      <div class="kpi-value amber">3</div>
+      <div class="kpi-sub">Grupos detectados</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Apps entrenamiento</div>
+      <div class="kpi-value accent" id="m-train">—</div>
+      <div class="kpi-sub">80% del dataset</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Apps test</div>
+      <div class="kpi-value blue" id="m-test">—</div>
+      <div class="kpi-sub">20% del dataset</div>
+    </div>
+  </div>
+
+  <!-- ── Gráfica 1: Importancia de variables ─────────────────────────────── -->
+  <div class="section-head">
+    <h2>Variables más influyentes</h2>
+    <div class="divider"></div>
+    <p>Contribución de cada feature al modelo de predicción de Rating (Random Forest Regressor).</p>
+  </div>
+
+  <div class="charts-grid" style="margin-bottom:3rem;">
+    <div class="chart-card">
+      <div class="chart-title">Importancia de variables — Predicción de Rating</div>
+      <div class="chart-sub">Mayor valor = mayor influencia en el rating predicho</div>
+      <div id="wrap-imp" style="text-align:center;padding:1rem;"><div class="pred-spinner"></div></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Matriz de correlación</div>
+      <div class="chart-sub">Relación lineal entre variables numéricas del dataset</div>
+      <div id="wrap-corr" style="text-align:center;padding:1rem;"><div class="pred-spinner"></div></div>
+    </div>
+  </div>
+
+  <!-- ── Gráfica 2: Clusters ─────────────────────────────────────────────── -->
+  <div class="section-head">
+    <h2>Segmentación K-Means</h2>
+    <div class="divider"></div>
+    <p>Agrupación de apps en 3 clusters según rating, precio y modelo de negocio.</p>
+  </div>
+
+  <div style="margin-bottom:3rem;">
+    <div class="chart-card">
+      <div class="chart-title">Clusters K-Means — Rating vs Instalaciones</div>
+      <div class="chart-sub">Cada punto es una app. Los colores representan los 3 grupos detectados automáticamente.</div>
+      <div id="wrap-cl" style="text-align:center;padding:1rem;"><div class="pred-spinner"></div></div>
+    </div>
+  </div>
+
+  <!-- ── Gráfica 3: Rating real vs predicho ──────────────────────────────── -->
+  <div class="section-head">
+    <h2>Evaluación del modelo</h2>
+    <div class="divider"></div>
+    <p>Comparación entre los valores reales de rating y los predichos por el modelo en el conjunto de test.</p>
+  </div>
+
+  <div class="charts-grid" style="margin-bottom:3rem;">
+    <div class="chart-card">
+      <div class="chart-title">Rating real vs predicho</div>
+      <div class="chart-sub">Diagonal perfecta = predicción exacta. Dispersión = margen de error.</div>
+      <div id="wrap-pred" style="text-align:center;padding:1rem;"><div class="pred-spinner"></div></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Distribución de errores (residuos)</div>
+      <div class="chart-sub">Diferencia entre rating real y predicho. Ideal: campana centrada en 0.</div>
+      <div id="wrap-resid" style="text-align:center;padding:1rem;"><div class="pred-spinner"></div></div>
+    </div>
+  </div>
+
+  <!-- ── Tabla de clusters ───────────────────────────────────────────────── -->
+  <div class="section-head">
+    <h2>Perfil de los clusters</h2>
+    <div class="divider"></div>
+    <p>Características promedio de cada grupo detectado por K-Means.</p>
+  </div>
+
+  <div class="table-wrap" style="margin-bottom:4rem;">
+    <table>
+      <thead>
+        <tr>
+          <th>Grupo</th>
+          <th>Apps</th>
+          <th>Rating promedio</th>
+          <th>Installs mediana</th>
+          <th>% Gratuitas</th>
+          <th>Perfil</th>
+        </tr>
+      </thead>
+      <tbody id="cluster-tbody">
+        <tr><td colspan="6" style="text-align:center;color:var(--muted);padding:2rem;">
+          <div class="pred-spinner"></div>
+        </td></tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<style>
+.pred-spinner {
+  width: 32px; height: 32px; margin: 2rem auto;
+  border: 3px solid rgba(22,163,74,0.15);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: pred-spin 0.8s linear infinite;
+}
+@keyframes pred-spin { to { transform: rotate(360deg); } }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const CLUSTER_COLORS  = ['#16a34a', '#0284c7', '#d97706'];
+const CLUSTER_NOMBRES = ['Grupo A', 'Grupo B', 'Grupo C'];
+const PERFILES = [
+  'Apps masivas gratuitas — alta adopción y volumen',
+  'Apps especializadas o de pago — nicho con alto rating',
+  'Apps emergentes — menor tracción inicial'
+];
+
+// ── Métricas ──────────────────────────────────────────────────────────────
+fetch('/api/predictivo/metricas').then(r => r.json()).then(d => {
+  document.getElementById('m-r2').textContent   = d.rating_model.r2;
+  document.getElementById('m-rmse').textContent  = '±' + d.rating_model.rmse;
+  document.getElementById('m-acc').textContent   = (d.installs_model.accuracy * 100).toFixed(1) + '%';
+  document.getElementById('m-train').textContent = d.train_size ? d.train_size.toLocaleString() : '—';
+  document.getElementById('m-test').textContent  = d.test_size  ? d.test_size.toLocaleString()  : '—';
+
+  // Tabla clusters
+  const tbody = document.getElementById('cluster-tbody');
+  tbody.innerHTML = d.clusters.map((cl, i) => `
+    <tr>
+      <td>
+        <span style="display:inline-flex;align-items:center;gap:8px;">
+          <span style="width:12px;height:12px;border-radius:50%;
+                       background:${CLUSTER_COLORS[i]};display:inline-block;flex-shrink:0;"></span>
+          <strong>${CLUSTER_NOMBRES[i]}</strong>
+        </span>
+      </td>
+      <td style="font-family:var(--font-head);">${cl.tamanio.toLocaleString()}</td>
+      <td>
+        <span style="color:${cl.rating >= 4 ? 'var(--accent)' : cl.rating >= 3 ? 'var(--amber)' : 'var(--red)'};
+                     font-weight:600;">
+          ${cl.rating} ★
+        </span>
+      </td>
+      <td style="font-family:var(--font-head);font-size:13px;">
+        ${cl.installs >= 1e6
+          ? (cl.installs / 1e6).toFixed(1) + 'M'
+          : (cl.installs / 1e3).toFixed(0) + 'K'}
+      </td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div style="flex:1;height:6px;background:var(--bg3);border-radius:3px;overflow:hidden;min-width:80px;">
+            <div style="width:${cl.free_pct}%;height:100%;background:${CLUSTER_COLORS[i]};
+                         border-radius:3px;"></div>
+          </div>
+          <span style="font-size:12px;color:var(--muted);white-space:nowrap;">${cl.free_pct}%</span>
+        </div>
+      </td>
+      <td style="font-size:12px;color:var(--muted);">${PERFILES[i]}</td>
+    </tr>
+  `).join('');
+}).catch(() => {
+  document.getElementById('cluster-tbody').innerHTML =
+    '<tr><td colspan="6" style="text-align:center;color:var(--red);padding:1.5rem;">Error al cargar métricas.</td></tr>';
+});
+
+// ── Gráficas ──────────────────────────────────────────────────────────────
+function loadChart(url, wrapperId) {
+  fetch(url)
+    .then(r => r.json())
+    .then(d => {
+      document.getElementById(wrapperId).innerHTML =
+        `<img src="data:image/png;base64,${d.img}"
+              style="width:100%;border-radius:8px;display:block;" alt="gráfica">`;
+    })
+    .catch(() => {
+      document.getElementById(wrapperId).innerHTML =
+        '<p style="color:var(--muted);font-size:13px;padding:1rem;">Error al cargar la gráfica.</p>';
+    });
+}
+
+loadChart('/api/predictivo/graficas/importancia', 'wrap-imp');
+loadChart('/api/predictivo/graficas/correlacion',  'wrap-corr');
+loadChart('/api/predictivo/graficas/clusters',     'wrap-cl');
+loadChart('/api/predictivo/graficas/prediccion',   'wrap-pred');
+loadChart('/api/predictivo/graficas/residuos',     'wrap-resid');
+</script>
+{% endblock %}

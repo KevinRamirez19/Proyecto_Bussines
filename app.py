@@ -2,11 +2,17 @@ from flask import Flask, render_template, jsonify
 import pandas as pd
 import numpy as np
 import os
-
+from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
+from sklearn.cluster import KMeans
+from sklearn.preprocessing import StandardScaler, LabelEncoder
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import r2_score, accuracy_score, classification_report
+import warnings
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import io, base64
+warnings.filterwarnings('ignore')
 app = Flask(__name__)
 
 DATA_PATH = os.path.join('data', 'processed', 'googleplaystore_limpieza.xlsx')
@@ -366,6 +372,301 @@ def grafica_categorias():
     )
     ax.set_ylabel('Cantidad de apps', color=MUTED, fontsize=9)
     ax.legend(facecolor=BG3, edgecolor='#ffffff15', labelcolor=TEXT, fontsize=9)
+    fig.tight_layout()
+    return jsonify({'img': fig_to_b64(fig)})
+
+@app.route('/predictivo')
+def predictivo():
+    return render_template('predictivo.html')
+
+# ── Helpers de modelos (se entrenan una sola vez por request) ───────────────
+def preparar_features(df):
+    """Prepara el dataframe para ML: codifica categorías, limpia nulos."""
+    d = df.copy()
+    d['Category_enc']       = LabelEncoder().fit_transform(d['Category'].astype(str))
+    d['ContentRating_enc']  = LabelEncoder().fit_transform(d['Content Rating'].astype(str))
+    d['IsFree_int']         = d['IsFree'].astype(int)
+    d['Size_MB']            = pd.to_numeric(d.get('Size_MB', pd.Series(dtype=float)), errors='coerce').fillna(d.get('Size_MB', pd.Series(dtype=float)).median() if 'Size_MB' in d.columns else 10)
+    d['Price']              = pd.to_numeric(d['Price'], errors='coerce').fillna(0)
+    d['Reviews']            = pd.to_numeric(d.get('Reviews', pd.Series(dtype=float)), errors='coerce').fillna(0)
+    return d
+
+FEATURES_RATING   = ['Category_enc', 'ContentRating_enc', 'IsFree_int', 'Price', 'Reviews']
+FEATURES_INSTALLS = ['Category_enc', 'ContentRating_enc', 'IsFree_int', 'Price', 'Rating']
+FEATURES_CLUSTER  = ['Rating', 'IsFree_int', 'Price']
+
+# ── API: métricas generales de los 3 modelos ────────────────────────────────
+@app.route('/api/predictivo/metricas')
+def api_predictivo_metricas():
+    df = load_data()
+    d  = preparar_features(df)
+
+    # ── 1. Regresión: predicción de Rating ──────────────────────────────────
+    mask_r = d['Rating'].notna()
+    X_r = d.loc[mask_r, FEATURES_RATING].fillna(0)
+    y_r = d.loc[mask_r, 'Rating']
+    X_tr, X_te, y_tr, y_te = train_test_split(X_r, y_r, test_size=0.2, random_state=42)
+    rf_rating = RandomForestRegressor(n_estimators=80, random_state=42)
+    rf_rating.fit(X_tr, y_tr)
+    r2   = round(r2_score(y_te, rf_rating.predict(X_te)), 3)
+    rmse = round(float(np.sqrt(((y_te - rf_rating.predict(X_te))**2).mean())), 3)
+
+    # ── 2. Clasificación: nivel de instalaciones ────────────────────────────
+    def nivel_installs(x):
+        if x >= 10_000_000: return 'Alto (10M+)'
+        elif x >= 100_000:  return 'Medio (100K–10M)'
+        else:               return 'Bajo (<100K)'
+
+    d['nivel'] = d['Installs'].apply(nivel_installs)
+    mask_i = d['Rating'].notna()
+    X_i = d.loc[mask_i, FEATURES_INSTALLS].fillna(0)
+    y_i = d.loc[mask_i, 'nivel']
+    X_tri, X_tei, y_tri, y_tei = train_test_split(X_i, y_i, test_size=0.2, random_state=42)
+    train_size = int(len(X_tr))
+    test_size  = int(len(X_te))
+    rf_inst = RandomForestClassifier(n_estimators=80, random_state=42)
+    rf_inst.fit(X_tri, y_tri)
+    acc = round(accuracy_score(y_tei, rf_inst.predict(X_tei)), 3)
+
+    # ── 3. Clustering K-Means ───────────────────────────────────────────────
+    X_cl = d[FEATURES_CLUSTER].fillna(0)
+    scaler  = StandardScaler()
+    X_sc    = scaler.fit_transform(X_cl)
+    km      = KMeans(n_clusters=3, random_state=42, n_init=10)
+    labels  = km.fit_predict(X_sc)
+    d['cluster'] = labels
+    cluster_info = []
+    for cl in sorted(d['cluster'].unique()):
+        g = d[d['cluster'] == cl]
+        cluster_info.append({
+            'id':        int(cl),
+            'tamanio':   int(len(g)),
+            'rating':    round(float(g['Rating'].mean()), 2),
+            'installs':  int(g['Installs'].median()),
+            'free_pct':  round(float(g['IsFree'].mean() * 100), 1),
+        })
+
+    # ── Importancias del modelo de Rating ──────────────────────────────────
+    imp = dict(zip(FEATURES_RATING, rf_rating.feature_importances_.round(3).tolist()))
+
+    return jsonify({
+        'rating_model':   {'r2': r2, 'rmse': rmse, 'importancias': imp},
+        'installs_model': {'accuracy': acc},
+        'clusters':       cluster_info,
+        'train_size': train_size,
+        'test_size':  test_size
+    })
+
+# ── API: gráfica de correlaciones ──────────────────────────────────────────
+@app.route('/api/predictivo/graficas/correlacion')
+def grafica_correlacion():
+    df = load_data()
+    d  = preparar_features(df)
+    cols = ['Rating', 'Installs', 'Price', 'Reviews', 'IsFree_int']
+    corr = d[cols].corr().round(2)
+
+    fig, ax = plt.subplots(figsize=(6, 5))
+    style_ax(ax, fig)
+    im = ax.imshow(corr.values, cmap='RdYlGn', vmin=-1, vmax=1, aspect='auto')
+    ax.set_xticks(range(len(cols)))
+    ax.set_yticks(range(len(cols)))
+    labels_es = ['Rating', 'Installs', 'Precio', 'Reseñas', 'Es Gratis']
+    ax.set_xticklabels(labels_es, rotation=30, ha='right', fontsize=9, color=MUTED)
+    ax.set_yticklabels(labels_es, fontsize=9, color=MUTED)
+    for i in range(len(cols)):
+        for j in range(len(cols)):
+            ax.text(j, i, str(corr.values[i, j]),
+                    ha='center', va='center', fontsize=9,
+                    color='#0d1f16' if abs(corr.values[i, j]) < 0.6 else 'white')
+    fig.colorbar(im, ax=ax, shrink=0.8)
+    ax.set_title('Matriz de correlación', color=TEXT, fontsize=11, pad=10)
+    fig.tight_layout()
+    return jsonify({'img': fig_to_b64(fig)})
+
+# ── API: gráfica importancia de variables ──────────────────────────────────
+@app.route('/api/predictivo/graficas/importancia')
+def grafica_importancia():
+    df = load_data()
+    d  = preparar_features(df)
+
+    mask = d['Rating'].notna()
+    X = d.loc[mask, FEATURES_RATING].fillna(0)
+    y = d.loc[mask, 'Rating']
+    rf = RandomForestRegressor(n_estimators=80, random_state=42)
+    rf.fit(X, y)
+
+    nombres = ['Categoría', 'Clasificación\ncontenido', 'Es Gratis', 'Precio', 'Reseñas']
+    imp     = rf.feature_importances_
+    orden   = np.argsort(imp)
+
+    fig, ax = plt.subplots(figsize=(7, 4))
+    style_ax(ax, fig)
+    bars = ax.barh([nombres[i] for i in orden], imp[orden],
+                   color=ACCENT + 'bb', edgecolor='none', linewidth=0)
+    for bar, val in zip(bars, imp[orden]):
+        ax.text(bar.get_width() + 0.005, bar.get_y() + bar.get_height()/2,
+                f'{val:.3f}', va='center', fontsize=9, color=MUTED)
+    ax.set_xlabel('Importancia relativa', color=MUTED, fontsize=9)
+    ax.set_title('Variables más influyentes en el Rating', color=TEXT, fontsize=11, pad=10)
+    ax.set_xlim(0, imp.max() + 0.08)
+    fig.tight_layout()
+    return jsonify({'img': fig_to_b64(fig)})
+
+# ── API: gráfica clusters ──────────────────────────────────────────────────
+@app.route('/api/predictivo/graficas/clusters')
+def grafica_clusters():
+    df = load_data()
+    d  = preparar_features(df)
+
+    X_cl  = d[FEATURES_CLUSTER].fillna(0)
+    sc    = StandardScaler()
+    X_sc  = sc.fit_transform(X_cl)
+    km    = KMeans(n_clusters=3, random_state=42, n_init=10)
+    d['cluster'] = km.fit_predict(X_sc)
+
+    colores = [ACCENT + 'cc', BLUE + 'cc', AMBER + 'cc']
+    nombres = ['Grupo A', 'Grupo B', 'Grupo C']
+
+    fig, ax = plt.subplots(figsize=(7, 4))
+    style_ax(ax, fig)
+    for cl in range(3):
+        g = d[d['cluster'] == cl].sample(min(400, len(d[d['cluster'] == cl])), random_state=42)
+        ax.scatter(g['Rating'], np.log1p(g['Installs']),
+                   color=colores[cl], alpha=0.5, s=18,
+                   label=f'{nombres[cl]} (n={len(d[d["cluster"]==cl])})', edgecolors='none')
+    ax.set_xlabel('Rating', color=MUTED, fontsize=9)
+    ax.set_ylabel('log(Installs + 1)', color=MUTED, fontsize=9)
+    ax.set_title('Clusters K-Means: Rating vs Instalaciones', color=TEXT, fontsize=11, pad=10)
+    ax.legend(facecolor=BG3, edgecolor='#ccddcc', labelcolor=TEXT, fontsize=9)
+    fig.tight_layout()
+    return jsonify({'img': fig_to_b64(fig)})
+
+# ── API: predicción en tiempo real desde el formulario ─────────────────────
+@app.route('/api/predictivo/predecir', methods=['POST'])
+def api_predecir():
+    from flask import request
+    data = request.json
+
+    df = load_data()
+    d  = preparar_features(df)
+
+    # Encoders entrenados con los datos reales
+    le_cat  = LabelEncoder().fit(d['Category'].astype(str))
+    le_cr   = LabelEncoder().fit(d['Content Rating'].astype(str))
+
+    # Entrada del usuario
+    cat_input = data.get('category', 'TOOLS')
+    cr_input  = data.get('content_rating', 'Everyone')
+    is_free   = int(data.get('is_free', 1))
+    price     = float(data.get('price', 0))
+    reviews   = float(data.get('reviews', 1000))
+    rating    = float(data.get('rating', 4.0))
+
+    # Encode — si el valor no está en el encoder, usar 0
+    try:
+        cat_enc = int(le_cat.transform([cat_input])[0])
+    except:
+        cat_enc = 0
+    try:
+        cr_enc = int(le_cr.transform([cr_input])[0])
+    except:
+        cr_enc = 0
+
+    # ── Modelo Rating ──────────────────────────────────────────────────────
+    mask_r = d['Rating'].notna()
+    X_r = d.loc[mask_r, FEATURES_RATING].fillna(0)
+    y_r = d.loc[mask_r, 'Rating']
+    rf_rating = RandomForestRegressor(n_estimators=80, random_state=42)
+    rf_rating.fit(X_r, y_r)
+    x_rating = [[cat_enc, cr_enc, is_free, price, reviews]]
+    pred_rating = round(float(rf_rating.predict(x_rating)[0]), 2)
+    pred_rating = min(5.0, max(1.0, pred_rating))
+
+    # ── Modelo Installs ────────────────────────────────────────────────────
+    def nivel_installs(x):
+        if x >= 10_000_000: return 'Alto (10M+)'
+        elif x >= 100_000:  return 'Medio (100K–10M)'
+        else:               return 'Bajo (<100K)'
+
+    d['nivel'] = d['Installs'].apply(nivel_installs)
+    mask_i = d['Rating'].notna()
+    X_i = d.loc[mask_i, FEATURES_INSTALLS].fillna(0)
+    y_i = d.loc[mask_i, 'nivel']
+    rf_inst = RandomForestClassifier(n_estimators=80, random_state=42)
+    rf_inst.fit(X_i, y_i)
+    x_inst = [[cat_enc, cr_enc, is_free, price, rating]]
+    pred_nivel  = rf_inst.predict(x_inst)[0]
+    pred_probas = rf_inst.predict_proba(x_inst)[0]
+    clases      = rf_inst.classes_.tolist()
+    probas_dict = {c: round(float(p) * 100, 1) for c, p in zip(clases, pred_probas)}
+
+    # ── Cluster ────────────────────────────────────────────────────────────
+    X_cl = d[FEATURES_CLUSTER].fillna(0)
+    sc   = StandardScaler()
+    X_sc = sc.fit_transform(X_cl)
+    km   = KMeans(n_clusters=3, random_state=42, n_init=10)
+    km.fit(X_sc)
+    x_cl_raw = [[rating, is_free, price]]
+    x_cl_sc  = sc.transform(x_cl_raw)
+    cluster  = int(km.predict(x_cl_sc)[0])
+
+    return jsonify({
+        'rating_pred':   pred_rating,
+        'nivel_installs': pred_nivel,
+        'probabilidades': probas_dict,
+        'cluster':        cluster,
+    })
+
+@app.route('/api/predictivo/graficas/prediccion')
+def grafica_prediccion():
+    df = load_data()
+    d  = preparar_features(df)
+
+    mask = d['Rating'].notna()
+    X = d.loc[mask, FEATURES_RATING].fillna(0)
+    y = d.loc[mask, 'Rating']
+    X_tr, X_te, y_tr, y_te = train_test_split(X, y, test_size=0.2, random_state=42)
+    rf = RandomForestRegressor(n_estimators=80, random_state=42)
+    rf.fit(X_tr, y_tr)
+    y_pred = rf.predict(X_te)
+
+    fig, ax = plt.subplots(figsize=(6, 5))
+    style_ax(ax, fig)
+    ax.scatter(y_te, y_pred, color=ACCENT + '55', s=12, edgecolors='none')
+    ax.plot([1, 5], [1, 5], color=RED, linewidth=1.2, linestyle='--', label='Predicción perfecta')
+    ax.set_xlabel('Rating real', color=MUTED, fontsize=9)
+    ax.set_ylabel('Rating predicho', color=MUTED, fontsize=9)
+    ax.set_title('Rating real vs predicho (conjunto test)', color=TEXT, fontsize=11, pad=10)
+    ax.legend(facecolor=BG3, edgecolor='#ccddcc', labelcolor=TEXT, fontsize=9)
+    ax.set_xlim(1, 5.2)
+    ax.set_ylim(1, 5.2)
+    fig.tight_layout()
+    return jsonify({'img': fig_to_b64(fig)})
+
+
+@app.route('/api/predictivo/graficas/residuos')
+def grafica_residuos():
+    df = load_data()
+    d  = preparar_features(df)
+
+    mask = d['Rating'].notna()
+    X = d.loc[mask, FEATURES_RATING].fillna(0)
+    y = d.loc[mask, 'Rating']
+    X_tr, X_te, y_tr, y_te = train_test_split(X, y, test_size=0.2, random_state=42)
+    rf = RandomForestRegressor(n_estimators=80, random_state=42)
+    rf.fit(X_tr, y_tr)
+    residuos = y_te - rf.predict(X_te)
+
+    fig, ax = plt.subplots(figsize=(6, 5))
+    style_ax(ax, fig)
+    ax.hist(residuos, bins=30, color=BLUE + 'bb', edgecolor='none', linewidth=0)
+    ax.axvline(0, color=RED, linewidth=1.2, linestyle='--', label='Error = 0')
+    ax.axvline(residuos.mean(), color=AMBER, linewidth=1,
+               linestyle=':', label=f'Media = {residuos.mean():.3f}')
+    ax.set_xlabel('Error (real − predicho)', color=MUTED, fontsize=9)
+    ax.set_ylabel('Frecuencia', color=MUTED, fontsize=9)
+    ax.set_title('Distribución de residuos del modelo', color=TEXT, fontsize=11, pad=10)
+    ax.legend(facecolor=BG3, edgecolor='#ccddcc', labelcolor=TEXT, fontsize=9)
     fig.tight_layout()
     return jsonify({'img': fig_to_b64(fig)})
 
